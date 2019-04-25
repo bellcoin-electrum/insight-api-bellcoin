@@ -109,7 +109,7 @@ Status.prototype.getBlockChainInfo = function(next) {
       rpc.getBlockChainInfo(function(err, info){
         if (err) return cb(err);
 
-        that.chain = info.result;
+        that.info = info.result;
         return cb();
       });
     },
