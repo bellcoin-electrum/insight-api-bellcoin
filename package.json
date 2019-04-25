@@ -1,8 +1,8 @@
 {
-  "name": "insight-bitcore-api",
+  "name": "insight-api-bellcoin",
   "description": "An open-source bitcoin blockchain API. The Insight API provides you with a convenient, powerful and simple way to query and broadcast data on the bitcoin network and build your own services with it.",
   "version": "0.2.18",
-  "repository": "git://github.com/bitpay/insight-api.git",
+  "repository": "git://github.com/bellcoin-electrum/insight-api-bellcoin.git",
   "contributors": [{
     "name": "Matias Alejo Garcia",
     "email": "ematiu@gmail.com"
@@ -23,15 +23,15 @@
     "email": "jungans@gmail.com"
   }],
   "bugs": {
-    "url": "https://github.com/bitpay/insight-api/issues"
+    "url": "https://github.com/bellcoin-electrum/insight-api-bellcoin/issues"
   },
-  "homepage": "https://github.com/bitpay/insight-api",
+  "homepage": "https://github.com/bellcoin-electrum/insight-api-bellcoin",
   "license": "MIT",
   "keywords": [
     "insight",
     "insight api",
     "blockchain",
-    "bitcoin api",
+    "bellcoin api",
     "blockchain api",
     "json",
     "bitcore"
@@ -48,7 +48,7 @@
     "base58-native": "0.1.2",
     "bignum": "*",
     "morgan": "*",
-    "bitcore": "git://github.com/ett126/bitcore-xpchain.git",
+    "bitcore": "git://github.com/bellcoin-electrum/bitcore-bellcoin.git",
     "bufferput": "git://github.com/bitpay/node-bufferput.git",
     "buffertools": "2.1.6",
     "commander": "^2.3.0",

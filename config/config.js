@@ -20,7 +20,7 @@ function getUserHome() {
   return process.env[(process.platform == 'win32') ? 'USERPROFILE' : 'HOME'];
 }
 
-var home = process.env.INSIGHT_DB || (getUserHome() + '/.insight-xpchain');
+var home = process.env.INSIGHT_DB || (getUserHome() + '/.insight-bellcoin');
 
 if (process.env.INSIGHT_NETWORK === 'livenet') {
   env = 'livenet';
@@ -28,14 +28,12 @@ if (process.env.INSIGHT_NETWORK === 'livenet') {
   port = '3000';
   b_port = '8762';
   p2p_port = '8798';
-  switch_height = 10275;
 } else {
   env = 'testnet';
   db = home + '/testnet';
   port = '3001';
   b_port = '18762';
   p2p_port = '18798';
-  switch_height = 10275;
 }
 port = parseInt(process.env.INSIGHT_PORT) || port;
 
