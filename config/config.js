@@ -9,8 +9,7 @@ var rootPath = path.normalize(__dirname + '/..'),
   db,
   port,
   b_port,
-  p2p_port,
-  switch_height;
+  p2p_port;
 
 var packageStr = fs.readFileSync(rootPath + '/package.json');
 var version = JSON.parse(packageStr).version;
@@ -26,14 +25,14 @@ if (process.env.INSIGHT_NETWORK === 'livenet') {
   env = 'livenet';
   db = home;
   port = '3000';
-  b_port = '8762';
-  p2p_port = '8798';
+  b_port = '25252';
+  p2p_port = '25253';
 } else {
   env = 'testnet';
   db = home + '/testnet';
   port = '3001';
-  b_port = '18762';
-  p2p_port = '18798';
+  b_port = '35252';
+  p2p_port = '35253';
 }
 port = parseInt(process.env.INSIGHT_PORT) || port;
 
@@ -58,9 +57,9 @@ var isWin = /^win/.test(process.platform);
 var isMac = /^darwin/.test(process.platform);
 var isLinux = /^linux/.test(process.platform);
 if (!dataDir) {
-  if (isWin) dataDir = '%APPDATA%\\XPChain\\';
-  if (isMac) dataDir = process.env.HOME + '/Library/Application Support/XPChain/';
-  if (isLinux) dataDir = process.env.HOME + '/.xpchain/';
+  if (isWin) dataDir = '%APPDATA%\\Bellcoin\\';
+  if (isMac) dataDir = process.env.HOME + '/Library/Application Support/Bellcoin/';
+  if (isLinux) dataDir = process.env.HOME + '/.bellcoin/';
 }
 dataDir += network === 'testnet' ? 'testnet3' : '';
 
