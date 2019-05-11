@@ -10,11 +10,11 @@ var bDb       = require('../../lib/BlockDb').default();
 
 function Status() {}
 
-Status.prototype.getNetworkInfo = function(next) {
+Status.prototype.getInfo = function(next) {
   var that = this;
   async.series([
     function (cb) {
-      rpc.getNetworkInfo(function(err, info){
+      rpc.getInfo(function(err, info){
         if (err) return cb(err);
 
         that.info = info.result;
