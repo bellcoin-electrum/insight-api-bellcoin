@@ -36,9 +36,6 @@ exports.show = function(req, res) {
     case 'getBestBlockHash':
       statusObject.getBestBlockHash(returnJsonp);
       break;
-    case 'getBlockChainInfo':
-      statusObject.getBlockChainInfo(returnJsonp);
-      break;
     case 'getNetworkInfo':
     default:
       statusObject.getNetworkInfo(returnJsonp);
