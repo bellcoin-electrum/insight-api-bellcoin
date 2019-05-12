@@ -12,6 +12,8 @@ var async = require('async');
 var MAX_BATCH_SIZE = 100;
 var RPC_CONCURRENCY = 5;
 
+var SIZE_TO_ENABLE_DEAD_CACHE = 500;
+
 var tDb = require('../../lib/TransactionDb').default();
 
 var checkSync = function(req, res) {
@@ -47,8 +49,9 @@ var getAddrs = function(req, res, next) {
     var addrStrs = req.param('addrs');
     var s = addrStrs.split(',');
     if (s.length === 0) return as;
+    var enableDeadAddresses = s.length > SIZE_TO_ENABLE_DEAD_CACHE;
     for (var i = 0; i < s.length; i++) {
-      var a = new Address(s[i]);
+      var a = new Address(s[i], enableDeadAddresses);
       as.push(a);
     }
   } catch (e) {
@@ -120,11 +123,20 @@ exports.multiutxo = function(req, res, next) {
   }
 };
 
+var stime = 0;
+var logtime = function(str, reset) {
+  if (reset || !stime)
+    stime = Date.now();
+
+  console.log('TIME:', str, ": ", Date.now() - stime);
+};
+
+var cache = {};
 exports.multitxs = function(req, res, next) {
   if (!checkSync(req, res)) return;
+  //logtime('Start', 1);
 
   function processTxs(txs, from, to, cb) {
-    txs = _.uniq(_.flatten(txs), 'txid');
     var nbTxs = txs.length;
 
     if (_.isUndefined(from) && _.isUndefined(to)) {
@@ -141,14 +153,6 @@ exports.multitxs = function(req, res, next) {
     if (to < 0) to = 0;
     if (from > nbTxs) from = nbTxs;
     if (to > nbTxs) to = nbTxs;
-
-    txs.sort(function(a, b) {
-      var b = (b.firstSeenTs || b.ts)+ b.txid;
-      var a = (a.firstSeenTs || a.ts)+ a.txid;
-      if (a > b) return -1;
-      if (a < b) return 1;
-      return 0;
-    });
     txs = txs.slice(from, to);
 
     var txIndex = {};
@@ -178,6 +182,8 @@ exports.multitxs = function(req, res, next) {
         }
 
         callback();
+      }, {
+        noExtraInfo: true
       });
     }, function(err) {
       if (err) return cb(err);
@@ -185,7 +191,20 @@ exports.multitxs = function(req, res, next) {
       // It could be that a txid is stored at an address but it is
       // no longer at bitcoind (for example a double spend)
 
-      var transactions = _.compact(_.pluck(txs, 'info'));
+      var transactions = _.compact(_.map(txs, 'info'));
+      //rm not used items
+      _.each(transactions, function(t) {
+        t.vin = _.map(t.vin, function(i) {
+          return _.pick(i, ['addr', 'valueSat']);
+        });
+        t.vout = _.map(t.vout, function(o) {
+          return _.pick(o, ['scriptPubKey', 'value']);
+        });
+        delete t.locktime;
+        delete t.version;
+      });
+
+
       transactions = {
         totalItems: nbTxs,
         from: +from,
@@ -198,8 +217,20 @@ exports.multitxs = function(req, res, next) {
 
   var from = req.param('from');
   var to = req.param('to');
+  var addrStrs = req.param('addrs');
+
+  if (cache[addrStrs] && from > 0) {
+    //logtime('Cache hit');
+    txs = cache[addrStrs];
+    return processTxs(txs, from, to, function(err, transactions) {
+      //logtime('After process Txs');
+      if (err) return common.handleErrors(err, res)
+      res.jsonp(transactions);
+    });
+  };
 
   var as = getAddrs(req, res, next);
+  //logtime('After getAddrs');
   if (as) {
     var txs = [];
     async.eachLimit(as, RPC_CONCURRENCY, function(a, callback) {
@@ -215,7 +246,27 @@ exports.multitxs = function(req, res, next) {
     }, function(err) { // finished callback
       if (err) return common.handleErrors(err, res);
 
+      var MAX = 9999999999;
+      txs = _.uniq(_.flatten(txs), 'txid');
+      txs.sort(function(a, b) {
+        var b = (b.ts || b.firstSeenTs || MAX) + b.txid;
+        var a = (a.ts || b.firstSeenTs || MAX) + a.txid;
+        if (a > b) return -1;
+        if (a < b) return 1;
+        return 0;
+      });
+
+      if (!cache[addrStrs] || from == 0) {
+        cache[addrStrs] = txs;
+        // 5 min. just to purge memory. Cache is overwritten in from=0 requests.
+        setTimeout(function() {
+          console.log('Deleting cache:', addrStrs.substr(0, 20));
+          delete cache[addrStrs];
+        }, 5 * 60 * 1000);
+      }
+
       processTxs(txs, from, to, function(err, transactions) {
+        //logtime('After process Txs');
         if (err) return common.handleErrors(err, res);
         res.jsonp(transactions);
       });
